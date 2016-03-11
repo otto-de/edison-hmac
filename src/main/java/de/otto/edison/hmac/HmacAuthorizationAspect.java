@@ -28,6 +28,12 @@ public class HmacAuthorizationAspect {
         this.authorizationService = authorizationService;
     }
 
+    @Resource
+    @Required
+    public void setAuthenticationService(AuthenticationService authenticationService) {
+        this.authenticationService = authenticationService;
+    }
+
     @Before("@annotation(allowedForRoles)")
     public void assertAuthorized(JoinPoint jp, AllowedForRoles allowedForRoles) {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();

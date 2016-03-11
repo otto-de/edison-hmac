@@ -31,6 +31,7 @@ public class AuthenticationServiceTest {
             throw e;
         }
     }
+
     @Test(expectedExceptions = AuthenticationException.class)
     public void shouldThrowExceptionDueToInvalidHeader() throws Exception{
         try{
