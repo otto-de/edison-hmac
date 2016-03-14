@@ -8,13 +8,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.function.Consumer;
 
 @Repository
 @Primary
@@ -23,11 +20,8 @@ public class VaultUserRepository implements UserRepository, RoleRepository {
     private final ConcurrentMap<String, String> userToKey = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, Set<String>> userToRole = new ConcurrentHashMap<>();
 
-    private final String credentialsJson;
-
     @Autowired
     public VaultUserRepository(final @Value("${edison.hmac.credentials-file}") String credentialsJson) {
-        this.credentialsJson = credentialsJson;
         loadCredentialsFromJson(credentialsJson, userToKey, userToRole);
     }
 
@@ -61,8 +55,8 @@ public class VaultUserRepository implements UserRepository, RoleRepository {
         UserCredentialsList userCredentialsList = new Gson().fromJson(credentialsJson, UserCredentialsList.class);
 
         userCredentialsList.stream().forEach(userCredentials -> {
-            userToKey.put(userCredentials.getName(),userCredentials.getPassword());
-            userToRole.put(userCredentials.getName(), userCredentials.getRoles());
+            userToKey.put(userCredentials.getUser(), userCredentials.getPassword());
+            userToRole.put(userCredentials.getUser(), userCredentials.getRoles());
         });
     }
 }

@@ -18,7 +18,7 @@ repositories {
 }
 
 dependencies {
-    compile "de.otto:hmac-auth-server:1.2.8"
+    compile "de.otto:hmac-auth-server:2.0.0"
     compile "com.google.code.gson:gson:2.6.2"
 
     testCompile 'org.springframework:spring-test:4.0.6.RELEASE'

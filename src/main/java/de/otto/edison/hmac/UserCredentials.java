@@ -2,26 +2,25 @@ package de.otto.edison.hmac;
 
 import jdk.nashorn.internal.ir.annotations.Immutable;
 
-import java.util.List;
 import java.util.Set;
 
 @Immutable
 public class UserCredentials {
 
-    private final String name;
+    private final String user;
     private final String password;
     private final Set<String> roles;
 
-    private UserCredentials(final String name,
+    private UserCredentials(final String user,
                             final String password,
                             final Set<String> roles) {
-        this.name = name;
+        this.user = user;
         this.password = password;
         this.roles = roles;
     }
 
-    public String getName() {
-        return name;
+    public String getUser() {
+        return user;
     }
 
     public String getPassword() {
@@ -39,7 +38,7 @@ public class UserCredentials {
 
         UserCredentials that = (UserCredentials) o;
 
-        if (name != null ? !name.equals(that.name) : that.name != null) return false;
+        if (user != null ? !user.equals(that.user) : that.user != null) return false;
         if (password != null ? !password.equals(that.password) : that.password != null) return false;
         return !(roles != null ? !roles.equals(that.roles) : that.roles != null);
 
@@ -47,7 +46,7 @@ public class UserCredentials {
 
     @Override
     public int hashCode() {
-        int result = name != null ? name.hashCode() : 0;
+        int result = user != null ? user.hashCode() : 0;
         result = 31 * result + (password != null ? password.hashCode() : 0);
         result = 31 * result + (roles != null ? roles.hashCode() : 0);
         return result;
@@ -56,7 +55,7 @@ public class UserCredentials {
     @Override
     public String toString() {
         return "UserCredentials{" +
-                "name='" + name + '\'' +
+                "user='" + user + '\'' +
                 ", password='" + password + '\'' +
                 ", roles=" + roles +
                 '}';
