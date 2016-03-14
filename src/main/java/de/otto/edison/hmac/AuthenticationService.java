@@ -2,31 +2,29 @@ package de.otto.edison.hmac;
 
 import de.otto.lhotse.hmac.HmacSignatureCalculator;
 import de.otto.lhotse.hmac.HmacSignatureInfo;
-import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
-import org.springframework.core.env.Environment;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 
-@Component
-public class AuthenticationService  extends PropertySourcesPlaceholderConfigurer {
-
-    private Environment environment;
+@Service
+public class AuthenticationService  {
 
     public static final String X_HMAC_AUTH_SIGNATURE = "x-hmac-auth-signature";
     private HmacSignatureCalculator hmacSignatureCalculator = new HmacSignatureCalculator();
 
-    @Override
-    public void setEnvironment(final Environment environment) {
-        this.environment = environment;
-        super.setEnvironment(environment);
+    private final Config config;
+
+    @Autowired
+    public AuthenticationService(final Config config) {
+        this.config = config;
     }
 
     public String validateHmacSignature(HttpServletRequest request) {
@@ -36,7 +34,8 @@ public class AuthenticationService  extends PropertySourcesPlaceholderConfigurer
         }
         String[] split = sigHeader.split(":");
         String username = split[0];
-        String secretKey = environment.getProperty("edison.hmac." + username + ".key"); // TODO: Can not load property from envvironment -> null
+        String secretKey = "";
+        // String secretKey = environment.getProperty("edison.hmac." + username + ".key"); // TODO: Can not load property from envvironment -> null
 
         try {
             ZonedDateTime dateHeader = ZonedDateTime.from(OffsetDateTime.parse(request.getHeader("x-hmac-auth-date")));

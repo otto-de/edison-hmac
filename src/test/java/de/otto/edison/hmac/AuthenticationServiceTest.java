@@ -1,12 +1,9 @@
 package de.otto.edison.hmac;
 
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.testng.annotations.Test;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 
 import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
@@ -15,7 +12,7 @@ import static org.junit.Assert.assertThat;
 
 public class AuthenticationServiceTest {
 
-    AuthenticationService testee = new AuthenticationService();
+    AuthenticationService testee = new AuthenticationService(config);
 
     MockHttpServletRequest req = new MockHttpServletRequest();
 
