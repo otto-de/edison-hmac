@@ -56,7 +56,7 @@ uploadArchives {
 
         pom.whenConfigured { pom ->
             pom.groupId = "de.otto.edison"
-            pom.version = "0.1.2"
+            pom.version = "0.2.0"
             pom.dependencies = []
         }
     }
