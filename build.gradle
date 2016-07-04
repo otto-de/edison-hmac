@@ -51,15 +51,19 @@ jar {
 }
 
 uploadArchives {
-    repositories.mavenDeployer {
-        repository(url: "https://artifactory.lhotse.ov.otto.de/artifactory/maven-p13n-releases-local") {
-            authentication(userName: "ft3_pipeline", password: "]peZaq1dBk3E")
-        }
+    if (project.hasProperty("artifactorypassword") && project.hasProperty("artifactoryuser")) {
+        repositories.mavenDeployer {
+            repository(url: "https://artifactory.lhotse.ov.otto.de/artifactory/libs-release-local") {
+                authentication(userName: artifactoryuser, password: artifactorypassword)
+            }
 
-        pom.whenConfigured { pom ->
-            pom.groupId = "de.otto.edison"
-            pom.version = "0.2.0"
-            pom.dependencies = []
+            pom.whenConfigured { pom ->
+                pom.groupId = "de.otto.edison"
+                pom.version = "0.2.0"
+                pom.dependencies = []
+            }
         }
+    } else {
+        logger.error "No artifactorypassword or artifactoryuser defined. Will not be able to upload archives."
     }
 }
