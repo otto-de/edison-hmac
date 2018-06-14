@@ -1,15 +1,5 @@
-apply plugin: 'java'
-apply plugin: 'idea'
-apply plugin: 'signing'
-apply plugin: 'maven'
-
-repositories {
-    mavenCentral()
-    maven { url 'https://artifactory.lhotse.ov.otto.de/artifactory/jcenter-remote/' }
-    maven { url 'https://artifactory.lhotse.ov.otto.de/artifactory/maven-central-remote/' }
-    maven { url 'https://artifactory.lhotse.ov.otto.de/artifactory/maven-p13n-releases-local' }
-    maven { url "https://oss.sonatype.org/content/repositories/releases/" }
-    maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+plugins {
+    id 'io.codearte.nexus-staging' version '0.11.0'
 }
 
 dependencies {
@@ -18,56 +8,123 @@ dependencies {
     compile 'org.springframework:spring-web:4.3.14.RELEASE'
 }
 
-version = '0.2.1'
-group = "de.otto.edison"
-
-test {
-    useTestNG()
-    println()
+nexusStaging {
+    username=sonatypeUsername
+    password=sonatypePassword
+    packageGroup='de.otto'
 }
 
-idea.project {
-    jdkName = "1.8"
-    languageLevel = "1.8"
+allprojects {
+    apply plugin: 'java'
+    apply plugin: 'idea'
+    apply plugin: 'eclipse'
+
+    version = '0.2.1'
+    group = 'de.otto.edison'
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven { url 'https://oss.sonatype.org/content/repositories/releases/' }
+        maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
+    }
+
 }
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '2.8'
-}
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
-
-artifacts {
-    archives sourcesJar
-    archives javadocJar
-}
+apply plugin: 'maven'
 
 jar {
     manifest.attributes provider: 'gradle'
 }
 
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from 'build/docs/javadoc'
+}
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allSource
+    classifier = 'sources'
+}
+
+apply plugin: 'signing'
+
+signing {
+    sign configurations.archives
+}
+
+artifacts {
+    archives jar
+    archives javadocJar
+    archives sourcesJar
+}
+
 uploadArchives {
-    if (project.hasProperty("artifactorypassword") && project.hasProperty("artifactoryuser")) {
-        repositories.mavenDeployer {
-            repository(url: "https://artifactory.lhotse.ov.otto.de/artifactory/libs-release-local") {
-                authentication(userName: artifactoryuser, password: artifactorypassword)
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: sonatypeUsername, password: sonatypePassword)
+            }
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: sonatypeUsername, password: sonatypePassword)
             }
 
-            pom.whenConfigured { pom ->
-                pom.groupId = group
-                pom.version = version
-                pom.dependencies = []
+            pom.project {
+                name 'edison-hmac'
+                packaging 'jar'
+                description 'A library used at otto.de to integrate hmac into edison microserivces.'
+                url 'http://github.com/otto-de/edison-hmac'
+
+                scm {
+                    url 'scm:git@github.com:otto-de/edison-hmac.git'
+                    connection 'scm:git@github.com:otto-de/edison-hmac.git'
+                    developerConnection 'scm:git@github.com:otto-de/edison-hmac.git'
+                }
+
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution 'repo'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'gsteinacker'
+                        name 'Guido Steinacker'
+                    }
+                    developer {
+                        id 'mbargmann'
+                        name 'Matthias Bargmann'
+                    }
+                    developer {
+                        id 'fbregulla'
+                        name 'Frank Bregulla'
+                    }
+                    developer {
+                        id 'ftorkler'
+                        name 'Florian Torkler'
+                    }
+                    developer {
+                        id 'miregel'
+                        name 'Micha Regel'
+                    }
+                    developer {
+                        id 'hstruebe'
+                        name 'Henning Strueber'
+                    }
+                    developer {
+                        id 'sweiler'
+                        name 'Simon Weiler'
+                    }
+                }
             }
         }
-    } else {
-        logger.error "No artifactorypassword or artifactoryuser defined. Will not be able to upload archives."
     }
 }
+
+
+
