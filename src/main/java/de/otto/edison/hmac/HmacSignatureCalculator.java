@@ -12,16 +12,20 @@ import java.util.Base64;
 public class HmacSignatureCalculator {
 
     public HmacSignatureInfo calculateSignature(String url, String user, String password, String requestMethod, ZonedDateTime dateTime) {
-        return calculateSignature(url, user, password, new byte[0], requestMethod, dateTime);
+        return calculateSignature(url, user, password, new byte[0], requestMethod, dateTime, false);
     }
 
     public HmacSignatureInfo calculateSignature(String url, String user, String password, byte[] body, String requestMethod, ZonedDateTime dateTime) {
+        return calculateSignature(url, user, password, body, requestMethod, dateTime, false);
+    }
+
+    public HmacSignatureInfo calculateSignature(String url, String user, String password, byte[] body, String requestMethod, ZonedDateTime dateTime, boolean simpleSign) {
         String dateHeaderValue = DateTimeFormatter.ISO_INSTANT.format(dateTime);
-        String stringToSign = createStringToSign(requestMethod, dateHeaderValue, url, body);
+        String stringToSign = simpleSign ? createSimpleStringToSign(requestMethod, url, dateHeaderValue) : createStringToSign(requestMethod, dateHeaderValue, url, body);
         String signature = signString(password, stringToSign);
 
         String signatureHeaderValue = user + ":" + signature;
-        return new HmacSignatureInfo(signatureHeaderValue,  dateHeaderValue);
+        return new HmacSignatureInfo(signatureHeaderValue, dateHeaderValue);
     }
 
     private String signString(String secretKey, String stringToSign) {
@@ -45,6 +49,13 @@ public class HmacSignatureCalculator {
         builder.append(requestUri).append("\n");
         builder.append(toMd5Hex(body));
 
+        return builder.toString();
+    }
+
+    private String createSimpleStringToSign(final String method, final String requestUri, final String dateHeader) {
+        final StringBuilder builder = new StringBuilder();
+
+        builder.append(method).append(requestUri).append(dateHeader);
         return builder.toString();
     }
 
