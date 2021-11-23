@@ -1,6 +1,6 @@
 # Release Notes
 
-## 0.2.3
+## 0.2.4
 **Add possibility to use a simpler signing format**
 
 ## 0.2.2
