@@ -1,29 +1,25 @@
-plugins {
-    id 'io.codearte.nexus-staging' version '0.11.0'
-}
 apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'eclipse'
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
+
+project.ext.set("debugUpload", false)
 
 dependencies {
-    compile "de.otto:hmac-auth-server:2.2.0"
-    compile "org.springframework.boot:spring-boot:1.5.9.RELEASE"
-    compile 'org.springframework:spring-web:4.3.14.RELEASE'
+    implementation("jakarta.servlet:jakarta.servlet-api:6.0.0") { ext.provided = true }
+    implementation "de.otto:hmac-auth-server:3.0.0"
+    implementation "org.springframework.boot:spring-boot:3.0.7"
+    implementation 'org.springframework:spring-web:6.0.8'
 
-    testCompile "org.testng:testng:6.9.6"
-    testCompile "org.mockito:mockito-core:1.10.19"
-    testCompile "org.hamcrest:hamcrest-core:1.3"
-    testCompile "org.hamcrest:hamcrest-library:1.3"
-}
-
-nexusStaging {
-    username=sonatypeUsername
-    password=sonatypePassword
-    packageGroup='de.otto'
+    testImplementation "org.testng:testng:6.9.6"
+    testImplementation "org.mockito:mockito-core:1.10.19"
+    testImplementation "org.hamcrest:hamcrest-core:1.3"
+    testImplementation "org.hamcrest:hamcrest-library:1.3"
 }
 
 allprojects {
-    version = '0.2.4'
+    version = '3.0.0'
     group = 'de.otto.edison'
 
     repositories {
@@ -34,8 +30,6 @@ allprojects {
     }
 
 }
-
-apply plugin: 'maven'
 
 jar {
     manifest.attributes provider: 'gradle'
@@ -51,84 +45,69 @@ task sourcesJar(type: Jar) {
     classifier = 'sources'
 }
 
-apply plugin: 'signing'
-
-signing {
-    sign configurations.archives
-}
-
 artifacts {
     archives jar
     archives javadocJar
     archives sourcesJar
 }
 
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
-            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                authentication(userName: sonatypeUsername, password: sonatypePassword)
-            }
-            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-                authentication(userName: sonatypeUsername, password: sonatypePassword)
-            }
-
-            pom.project {
-                name 'edison-hmac'
-                packaging 'jar'
-                description 'A library used at otto.de to integrate hmac into edison microserivces.'
-                url 'http://github.com/otto-de/edison-hmac'
-
-                scm {
-                    url 'scm:git@github.com:otto-de/edison-hmac.git'
-                    connection 'scm:git@github.com:otto-de/edison-hmac.git'
-                    developerConnection 'scm:git@github.com:otto-de/edison-hmac.git'
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = 'edison-hmac'
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+            versionMapping {
+                usage('java-api') {
+                    fromResolutionOf('runtimeClasspath')
                 }
-
+                usage('java-runtime') {
+                    fromResolutionResult()
+                }
+            }
+            pom {
+                name = 'edison-hmac'
+                description = 'A library used at otto.de to integrate hmac into edison microserivces.'
+                url = 'https://github.com/otto-de/edison-hmac'
                 licenses {
                     license {
-                        name 'The Apache Software License, Version 2.0'
-                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                        distribution 'repo'
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
                     }
                 }
-
                 developers {
                     developer {
-                        id 'gsteinacker'
-                        name 'Guido Steinacker'
+                        id = 'gsteinacker'
+                        name = 'Guido Steinacker'
                     }
-                    developer {
-                        id 'mbargmann'
-                        name 'Matthias Bargmann'
-                    }
-                    developer {
-                        id 'fbregulla'
-                        name 'Frank Bregulla'
-                    }
-                    developer {
-                        id 'ftorkler'
-                        name 'Florian Torkler'
-                    }
-                    developer {
-                        id 'miregel'
-                        name 'Micha Regel'
-                    }
-                    developer {
-                        id 'hstruebe'
-                        name 'Henning Strueber'
-                    }
-                    developer {
-                        id 'sweiler'
-                        name 'Simon Weiler'
-                    }
+                }
+                scm {
+                    connection = 'scm:git@github.com:otto-de/edison-hmac.git'
+                    developerConnection = 'scm:git@github.com:otto-de/edison-hmac.git'
+                    url = 'https://github.com/otto-de/edison-hmac'
                 }
             }
         }
     }
+    repositories {
+        maven {
+            def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+            def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
+            if (project.debugUpload) {
+                releasesRepoUrl = "$buildDir/repos/releases"
+                snapshotsRepoUrl = "$buildDir/repos/snapshots"
+            } else {
+                credentials {
+                    username = sonatypeUsername
+                    password = sonatypePassword
+                }
+            }
+            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+        }
+    }
 }
 
-
-
+signing {
+    sign publishing.publications.mavenJava
+}
